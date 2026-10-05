@@ -1,0 +1,706 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Petting Zoo Math</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800&family=Caveat+Brush&display=swap">
+<style>
+/* Layout: one worksheet column. Header controls, a 5-item meter with the teacher-orange score circle,
+   one item card at a time (prompt, picture, answer blanks), number pad and action buttons below. */
+:root {
+  --bg: #edf3f8;
+  --card: #ffffff;
+  --ink: #1b2a3a;
+  --muted: #566879;
+  --line: #cbd9e5;
+  --pond: #c4e6f8;
+  --pond-edge: #4ea6d8;
+  --grass: #d9f0c6;
+  --grass-edge: #79bb4c;
+  --pen: #e8590c;
+  --ok: #1b8a4a;
+  --blue: #2a6adf;
+  --shadow: rgba(27, 42, 58, .13);
+  --body: "Nunito", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", system-ui, sans-serif;
+  --hand: "Caveat Brush", "Nunito", system-ui, sans-serif;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1a28; --card: #172536; --ink: #eef3f9; --muted: #9fb2c8; --line: #2a3d55;
+    --pond: #1d4a66; --pond-edge: #4ea6d8; --grass: #24471f; --grass-edge: #79bb4c;
+    --pen: #ff8a3d; --ok: #4bd08a; --blue: #7da6ff; --shadow: rgba(0, 0, 0, .45);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1a28; --card: #172536; --ink: #eef3f9; --muted: #9fb2c8; --line: #2a3d55;
+  --pond: #1d4a66; --pond-edge: #4ea6d8; --grass: #24471f; --grass-edge: #79bb4c;
+  --pen: #ff8a3d; --ok: #4bd08a; --blue: #7da6ff; --shadow: rgba(0, 0, 0, .45);
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 18px; padding-inline: 16px; padding-block: 16px 40px; -webkit-tap-highlight-color: transparent; }
+.app { max-width: 720px; margin-inline: auto; display: flex; flex-direction: column; gap: 14px; }
+button { font-family: inherit; color: inherit; }
+button:focus-visible { outline: 4px solid var(--blue); outline-offset: 2px; }
+
+.top { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; }
+.brand { font-weight: 800; font-size: 22px; line-height: 1.1; }
+.brand small { display: block; font-weight: 600; font-size: 13px; color: var(--muted); letter-spacing: .04em; text-transform: uppercase; margin-top: 3px; }
+.tools { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-weight: 700; font-size: 15px; min-height: 40px; padding: 0 14px; border-radius: 999px; border: 2px solid var(--line); background: var(--card); cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--blue); border-color: var(--blue); color: #fff; }
+
+.meter { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+.steps { display: flex; gap: 8px; }
+.step { width: 38px; height: 38px; border-radius: 50%; border: 3px solid var(--line); display: grid; place-items: center; font-weight: 800; font-size: 16px; color: var(--muted); background: var(--card); }
+.step.now { border-color: var(--blue); color: var(--blue); }
+.step.full { border-color: var(--ok); background: var(--ok); color: #fff; }
+.step.part { border-color: var(--pen); color: var(--pen); }
+.score { font-family: var(--hand); color: var(--pen); font-size: 34px; line-height: 1; min-width: 74px; text-align: center; border: 4px solid var(--pen); border-radius: 50%; padding: 8px 10px 6px; transform: rotate(-5deg); }
+.score small { font-size: 18px; opacity: .8; }
+
+.sheet { display: flex; flex-direction: column; gap: 14px; }
+.qcard { background: var(--card); border-radius: 22px; padding: 18px 16px; box-shadow: 0 5px 0 var(--shadow); display: flex; flex-direction: column; gap: 14px; }
+.qhead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.qnum { margin: 0; font-size: 23px; font-weight: 800; }
+.read { min-height: 38px; padding: 0 12px; font-size: 14px; }
+.prompt p { margin: 0 0 4px; font-size: 20px; font-weight: 700; line-height: 1.35; }
+.prompt .zh { display: none; font-size: 16px; font-weight: 600; color: var(--muted); }
+body.zh .prompt .zh { display: block; }
+
+.pic { display: flex; flex-wrap: wrap; gap: 10px; align-items: stretch; }
+.box { flex: 1 1 140px; min-width: 0; border-radius: 16px; padding: 8px; display: flex; flex-wrap: wrap; gap: 4px; align-content: flex-start; justify-content: center; background: color-mix(in srgb, var(--line) 35%, transparent); }
+.box.dash { border: 3px dashed var(--line); background: transparent; align-items: center; justify-content: center; font-weight: 800; color: var(--muted); font-size: 22px; min-height: 64px; }
+.boxlabel { flex-basis: 100%; text-align: center; font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: .03em; }
+.an { width: 100%; height: auto; display: block; }
+.c-white { color: #ffffff; } .c-brown { color: #9a6234; } .c-gray { color: #a7afba; } .c-black { color: #454a54; } .c-yellow { color: #f4cf3a; }
+.ab { position: relative; width: clamp(40px, 11vw, 58px); padding: 0; border: 0; background: none; cursor: pointer; border-radius: 12px; }
+.ab .bd { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 800; font-size: 20px; color: #fff; background: rgba(27, 42, 58, .62); border-radius: 12px; opacity: 0; transform: scale(.6); transition: opacity .12s, transform .12s; pointer-events: none; }
+.ab.on .bd { opacity: 1; transform: scale(1); }
+.ab.pair .bd { opacity: 1; transform: scale(1); background: var(--blue); }
+.ab.left { outline: 4px solid var(--pen); outline-offset: 1px; }
+
+.part { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 2px dashed var(--line); }
+.part.wrong .fld { border-color: var(--pen); }
+.phead { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.plabel { font-weight: 800; font-size: 16px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.ppts { font-size: 13px; font-weight: 700; color: var(--muted); background: color-mix(in srgb, var(--line) 50%, transparent); border-radius: 999px; padding: 2px 10px; }
+.pmark { display: inline-flex; width: 30px; height: 30px; }
+.pmark svg { width: 100%; height: 100%; }
+.penchip { font-family: var(--hand); color: var(--pen); font-size: 24px; line-height: 1; border: 3px solid var(--pen); border-radius: 50%; padding: 4px 8px 2px; transform: rotate(-6deg); }
+.line { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 22px; font-weight: 800; }
+.fld { width: 66px; height: 58px; border: 3px solid var(--line); border-radius: 14px; background: var(--bg); font-size: 32px; font-weight: 800; cursor: pointer; font-variant-numeric: tabular-nums; }
+.fld.on { border-color: var(--blue); box-shadow: 0 0 0 4px color-mix(in srgb, var(--blue) 25%, transparent); }
+.fld:disabled { opacity: 1; cursor: default; background: transparent; border-color: var(--ok); }
+.eq { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; font-size: 30px; font-weight: 800; }
+.opb { width: 54px; height: 58px; border-radius: 14px; border: 3px solid var(--line); background: var(--card); font-size: 30px; font-weight: 800; cursor: pointer; }
+.opb:disabled { border-color: var(--ok); background: transparent; opacity: 1; }
+
+.ed { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.zone { border-radius: 18px; padding: 8px; min-height: 108px; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 4px; }
+.zone.pond { background: var(--pond); border: 3px solid var(--pond-edge); border-radius: 60% 40% 55% 45% / 45% 55% 45% 55%; }
+.zone.grass { background: var(--grass); border: 3px solid var(--grass-edge); }
+.zone .boxlabel { color: var(--ink); opacity: .75; }
+.tip { margin: 0; font-size: 14px; font-weight: 600; color: var(--muted); }
+
+.opts { display: flex; flex-direction: column; gap: 8px; }
+.opt { text-align: left; padding: 12px 14px; border-radius: 14px; border: 3px solid var(--line); background: var(--card); font-size: 17px; font-weight: 700; line-height: 1.35; cursor: pointer; }
+.opt .zh { display: none; font-weight: 600; color: var(--muted); font-size: 14px; margin-top: 3px; }
+body.zh .opt .zh { display: block; }
+.opt[aria-pressed="true"] { border-color: var(--blue); background: color-mix(in srgb, var(--blue) 12%, transparent); }
+.opt:disabled { opacity: 1; cursor: default; }
+.opt.ok { border-color: var(--ok); }
+
+.hint { margin: 0; min-height: 1.4em; font-weight: 700; font-size: 17px; text-wrap: balance; }
+.hint.good { color: var(--ok); }
+.hint.bad { color: var(--pen); }
+
+.pad { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 8px; }
+.key { min-height: 54px; border-radius: 14px; border: 2px solid var(--line); background: var(--card); font-size: 24px; font-weight: 800; cursor: pointer; box-shadow: 0 3px 0 var(--shadow); }
+.key:active { transform: translateY(2px); box-shadow: none; }
+.key.wide { grid-column: span 2; font-size: 18px; }
+
+.actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.btn { flex: 1 1 160px; min-height: 56px; border-radius: 16px; border: 0; background: var(--blue); color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; box-shadow: 0 4px 0 var(--shadow); }
+.btn.ghost { background: var(--card); color: var(--ink); border: 2px solid var(--line); flex-grow: 0; }
+
+.summary { background: var(--card); border-radius: 22px; padding: 24px 16px; box-shadow: 0 5px 0 var(--shadow); display: flex; flex-direction: column; align-items: center; gap: 14px; text-align: center; }
+.big { font-family: var(--hand); color: var(--pen); font-size: clamp(76px, 22vw, 120px); line-height: 1; border: 6px solid var(--pen); border-radius: 50%; padding: 22px 30px 14px; transform: rotate(-4deg); }
+.sumlist { list-style: none; margin: 0; padding: 0; width: 100%; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.sumlist li { display: flex; justify-content: space-between; gap: 10px; padding: 8px 12px; border-radius: 12px; background: color-mix(in srgb, var(--line) 35%, transparent); font-weight: 700; }
+.sumlist .miss { color: var(--pen); font-weight: 600; font-size: 14px; }
+.best { margin: 0; color: var(--muted); font-weight: 700; font-size: 15px; }
+
+@media (max-width: 460px) { .ed { grid-template-columns: 1fr; } .fld { width: 58px; } }
+@media (prefers-reduced-motion: reduce) { .ab .bd { transition: none; } }
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="a-sheep" viewBox="0 0 64 48">
+    <g fill="#3a3f48"><rect x="22" y="36" width="4" height="9" rx="2"/><rect x="38" y="36" width="4" height="9" rx="2"/><ellipse cx="53" cy="23" rx="7" ry="8"/></g>
+    <g fill="var(--ink)"><circle cx="19" cy="24" r="12"/><circle cx="31" cy="17" r="12.5"/><circle cx="43" cy="22" r="12"/><circle cx="26" cy="30" r="11"/><circle cx="39" cy="31" r="11"/></g>
+    <g fill="currentColor"><circle cx="19" cy="24" r="10.5"/><circle cx="31" cy="17" r="11"/><circle cx="43" cy="22" r="10.5"/><circle cx="26" cy="30" r="9.5"/><circle cx="39" cy="31" r="9.5"/></g>
+    <circle cx="55" cy="21" r="1.5" fill="#fff"/>
+  </symbol>
+  <symbol id="a-goat" viewBox="0 0 64 48">
+    <g fill="#3a3f48"><rect x="16" y="34" width="4" height="11" rx="2"/><rect x="40" y="34" width="4" height="11" rx="2"/></g>
+    <ellipse cx="30" cy="27" rx="19" ry="10" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M44 24 L50 11 Q56 8 58 14 L56 28 Q50 32 44 28Z" fill="currentColor" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+    <path d="M50 11 Q49 4 53 2 M55 11 Q57 4 61 5" fill="none" stroke="#3a3f48" stroke-width="2.5" stroke-linecap="round"/>
+    <circle cx="54" cy="17" r="1.6" fill="#3a3f48"/>
+    <path d="M52 30 l1 6" stroke="var(--ink)" stroke-width="2" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="a-duck" viewBox="0 0 64 48">
+    <path d="M8 26 Q6 40 24 42 L40 42 Q52 40 52 28 Q48 22 40 24 Q30 20 8 26Z" fill="currentColor" stroke="var(--ink)" stroke-width="2" stroke-linejoin="round"/>
+    <circle cx="46" cy="16" r="10" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <path d="M54 14 L63 18 L54 21Z" fill="#f08a24" stroke="var(--ink)" stroke-width="1.5" stroke-linejoin="round"/>
+    <circle cx="47" cy="13" r="1.8" fill="#3a3f48"/>
+    <path d="M18 31 Q27 38 38 30" fill="none" stroke="rgba(0,0,0,.28)" stroke-width="2.5" stroke-linecap="round"/>
+  </symbol>
+  <symbol id="a-rabbit" viewBox="0 0 64 48">
+    <ellipse cx="29" cy="33" rx="18" ry="11" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="9" cy="33" r="4.5" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <ellipse cx="45" cy="8" rx="3.2" ry="9" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <ellipse cx="53" cy="9" rx="3.2" ry="9" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="48" cy="24" r="9" fill="currentColor" stroke="var(--ink)" stroke-width="2"/>
+    <circle cx="51" cy="22" r="1.7" fill="#3a3f48"/>
+    <circle cx="56" cy="26" r="1.4" fill="#e58a9a"/>
+  </symbol>
+</svg>
+
+<main class="app">
+  <header class="top">
+    <div class="brand">Petting Zoo Math<small>Performance Assessment 练习</small></div>
+    <div class="tools">
+      <button class="chip" id="lv10" type="button" aria-pressed="true">Within 10 到10</button>
+      <button class="chip" id="lv20" type="button" aria-pressed="false">Within 20 到20</button>
+      <button class="chip" id="zh" type="button" aria-pressed="false">中文</button>
+    </div>
+  </header>
+
+  <div class="meter">
+    <div class="steps" id="steps" aria-label="Items"></div>
+    <div class="score" id="score" aria-label="Score">0<small>/10</small></div>
+  </div>
+
+  <div class="sheet" id="sheet"></div>
+
+  <p class="hint" id="hint" role="status"></p>
+  <div class="pad" id="pad" aria-label="Number pad"></div>
+  <div class="actions">
+    <button class="btn" id="check" type="button">Check 检查</button>
+    <button class="btn ghost" id="showans" type="button" hidden>Show answer 看答案</button>
+    <button class="btn" id="next" type="button" hidden>Next 下一题</button>
+  </div>
+</main>
+
+<script>
+(function () {
+  'use strict';
+  var MINUS = '−';
+  var ANIMALS = {
+    sheep: { sg: 'sheep', pl: 'sheep', zh: '绵羊' },
+    goat: { sg: 'goat', pl: 'goats', zh: '山羊' },
+    duck: { sg: 'duck', pl: 'ducks', zh: '鸭子' },
+    rabbit: { sg: 'rabbit', pl: 'rabbits', zh: '兔子' }
+  };
+  var COLORS = { white: '白色', brown: '棕色', gray: '灰色', black: '黑色', yellow: '黄色' };
+  var PAIRS = [['white', 'brown'], ['white', 'black'], ['brown', 'gray'], ['white', 'gray']];
+
+  var L = 10, zhOn = false;
+  try {
+    if (parseInt(localStorage.getItem('zoo-level'), 10) === 20) L = 20;
+    if (localStorage.getItem('zoo-zh') === 'on') zhOn = true;
+  } catch (e) {}
+
+  var qs = [], qi = 0, pi = 0, score = 0, cur = null, qDone = false, active = null;
+
+  function $(id) { return document.getElementById(id); }
+  function h(tag, cls, html) { var e = document.createElement(tag); if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; }
+  function rand(k) { return Math.floor(Math.random() * k); }
+  function pickOne(arr) { return arr[rand(arr.length)]; }
+  function shuffle(arr) { for (var i = arr.length - 1; i > 0; i--) { var j = rand(i + 1), t = arr[i]; arr[i] = arr[j]; arr[j] = t; } return arr; }
+  function noun(k, n) { return n === 1 ? ANIMALS[k].sg : ANIMALS[k].pl; }
+  function pairKey(x, y) { return Math.min(x, y) + '-' + Math.max(x, y); }
+
+  var sheet = $('sheet'), hintEl = $('hint'), btnCheck = $('check'), btnShow = $('showans'), btnNext = $('next'), padEl = $('pad');
+
+  /* ---------- speech ---------- */
+  function say(text) {
+    try {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      var u = new SpeechSynthesisUtterance(text);
+      u.lang = 'en-US'; u.rate = 0.85;
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  /* ---------- fields, pad, equation ---------- */
+  function setActive(f) {
+    if (active && active.el) active.el.classList.remove('on');
+    active = f;
+    if (f && !f.locked) f.el.classList.add('on');
+  }
+  function onEdit() {
+    if (!cur || qDone) return;
+    var p = cur.parts[pi];
+    if (p) { p.root.classList.remove('wrong'); p.root.querySelector('.pmark').innerHTML = ''; }
+    setHint('', '');
+  }
+  function field(maxLen) {
+    var b = h('button', 'fld'); b.type = 'button'; b.setAttribute('aria-label', 'answer blank');
+    var f = { el: b, v: '', locked: false, max: maxLen || 2 };
+    f.get = function () { return f.v; };
+    f.num = function () { return f.v === '' ? null : parseInt(f.v, 10); };
+    f.set = function (s) { f.v = String(s); b.textContent = f.v; };
+    f.lock = function () { f.locked = true; b.disabled = true; b.classList.remove('on'); };
+    b.addEventListener('click', function () { setActive(f); });
+    return f;
+  }
+  function press(d) {
+    if (!active || active.locked) return;
+    if (d === 'back') active.set(active.v.slice(0, -1));
+    else if (active.v === '0') active.set(d);
+    else if (active.v.length < active.max) active.set(active.v + d);
+    onEdit();
+  }
+  function buildPad() {
+    ['1', '2', '3', '4', '5', '6', '7', '8', '9', '0', 'back'].forEach(function (d) {
+      var k = h('button', 'key' + (d === 'back' ? ' wide' : ''), d === 'back' ? 'Delete 删除' : d);
+      k.type = 'button';
+      k.addEventListener('click', function () { press(d); });
+      padEl.appendChild(k);
+    });
+  }
+  function eqWidget() {
+    var wrap = h('div', 'eq'), a = field(2), b = field(2), c = field(2), op = '+';
+    var opb = h('button', 'opb', '+'); opb.type = 'button'; opb.setAttribute('aria-label', 'plus or minus');
+    opb.addEventListener('click', function () { op = op === '+' ? MINUS : '+'; opb.textContent = op; onEdit(); });
+    wrap.append(a.el, opb, b.el, h('span', '', '='), c.el);
+    return {
+      el: wrap, a: a, b: b, c: c,
+      op: function () { return op; },
+      setOp: function (v) { op = v; opb.textContent = v; },
+      vals: function () { return { a: a.num(), b: b.num(), c: c.num(), op: op }; },
+      lock: function () { a.lock(); b.lock(); c.lock(); opb.disabled = true; },
+      set: function (x, o, y, z) { a.set(x); this.setOp(o); b.set(y); c.set(z); }
+    };
+  }
+  function evalEq(a, op, b) { return op === '+' ? a + b : a - b; }
+
+  /* ---------- animals ---------- */
+  function animalBtn(k, color, counter) {
+    var b = h('button', 'ab', '<svg class="an c-' + color + '" viewBox="0 0 64 48" aria-hidden="true"><use href="#a-' + k + '"/></svg><span class="bd"></span>');
+    b.type = 'button'; b.setAttribute('aria-label', ANIMALS[k].sg);
+    if (counter) b.addEventListener('click', function () {
+      if (b.classList.contains('on')) return;
+      counter.n++; b.classList.add('on'); b.querySelector('.bd').textContent = counter.n;
+    });
+    return b;
+  }
+  function animalBox(k, color, n, counter, label) {
+    var box = h('div', 'box');
+    if (label) box.appendChild(h('div', 'boxlabel', label));
+    for (var i = 0; i < n; i++) box.appendChild(animalBtn(k, color, counter));
+    return box;
+  }
+
+  /* ---------- parts ---------- */
+  function P(label, pts, body, o) {
+    var root = h('div', 'part');
+    root.appendChild(h('div', 'phead', '<span class="plabel">' + label + '</span><span class="ppts">' + pts + ' pt' + (pts > 1 ? 's' : '') + '</span><span class="pmark"></span>'));
+    root.appendChild(body);
+    var p = { root: root, pts: pts, label: label, tries: 0, done: false, earned: 0, needsPad: true, first: null };
+    for (var key in o) p[key] = o[key];
+    return p;
+  }
+  function qCard(n, lines, zhLines) {
+    var card = h('article', 'qcard');
+    var head = h('div', 'qhead', '<h2 class="qnum">Item ' + n + '</h2>');
+    var rd = h('button', 'chip read', 'Read 朗读'); rd.type = 'button';
+    rd.addEventListener('click', function () { say(lines.join(' ')); });
+    head.appendChild(rd);
+    var pr = h('div', 'prompt');
+    lines.forEach(function (t) { pr.appendChild(h('p', '', t)); });
+    pr.appendChild(h('p', 'zh', zhLines.join(' ')));
+    card.append(head, pr);
+    return card;
+  }
+  function ansLine(unit) {
+    var f = field(2), line = h('div', 'line');
+    line.append(f.el, h('span', '', unit));
+    return { el: line, f: f };
+  }
+  function storyEq(e, s, m, t) {
+    var v = e.vals();
+    if (v.a === null || v.b === null || v.c === null) return { ok: false, hint: 'Write the whole equation, with = and the total. 要写完整的算式，别忘了 = 和结果。' };
+    if (evalEq(v.a, v.op, v.b) !== v.c) return { ok: false, hint: v.a + ' ' + v.op + ' ' + v.b + ' is not ' + v.c + '. Check the math. 这个算式不成立，再算一算。' };
+    var good, inOrder = false;
+    if (v.op === '+') { good = v.c === t && ((v.a === s && v.b === m) || (v.a === m && v.b === s)); inOrder = v.a === s && v.b === m; }
+    else { good = v.a === t && ((v.b === s && v.c === m) || (v.b === m && v.c === s)); }
+    if (!good) return { ok: false, hint: 'That equation is true, but it does not match the story. Use the numbers from the story. 算式要用题目里的数。' };
+    return { ok: true, msg: (v.op === '+' && !inOrder) ? 'Correct! The story starts with ' + s + ', so ' + s + ' + ' + m + ' = ' + t + ' fits best. 对啦！' : 'Correct! 对啦！' };
+  }
+
+  /* ---------- builders ---------- */
+  function buildQ1(d) {
+    var card = qCard(1, [
+      'Tim feeds ' + d.a + ' ' + d.c1 + ' ' + noun(d.k, d.a) + ' and ' + d.b + ' ' + d.c2 + ' ' + noun(d.k, d.b) + '.',
+      'How many ' + d.c1 + ' and ' + d.c2 + ' ' + ANIMALS[d.k].pl + ' does he feed in all?'
+    ], ['Tim 喂了 ' + d.a + ' 只' + COLORS[d.c1] + ANIMALS[d.k].zh + '和 ' + d.b + ' 只' + COLORS[d.c2] + ANIMALS[d.k].zh + '。一共喂了多少只？']);
+    var counter = { n: 0 }, pic = h('div', 'pic');
+    pic.append(animalBox(d.k, d.c1, d.a, counter), animalBox(d.k, d.c2, d.b, counter));
+    card.appendChild(pic);
+    card.appendChild(h('p', 'tip', 'Tap each animal to count it. 点一点动物来数数。'));
+    var al = ansLine(ANIMALS[d.k].pl), tot = d.a + d.b;
+    var p = P('Answer', 1, al.el, {
+      first: al.f,
+      check: function () { return al.f.num() === tot ? { ok: true } : { ok: false, hint: 'Not yet. Count all the animals together. 再数一数，两种合起来。' }; },
+      reveal: function () { al.f.set(tot); },
+      lock: function () { al.f.lock(); }
+    });
+    return { el: card, parts: [p] };
+  }
+
+  function buildQ2(d) {
+    var an = ANIMALS[d.k];
+    var card = qCard(2, [
+      'Tim feeds ' + d.s + ' ' + noun(d.k, d.s) + '.',
+      'Some more ' + an.pl + ' come to eat.',
+      'Now there are ' + d.t + ' ' + an.pl + '.',
+      'How many more ' + an.pl + ' came to eat?'
+    ], ['Tim 喂了 ' + d.s + ' 只' + an.zh + '。又来了几只' + an.zh + '。现在有 ' + d.t + ' 只。又来了多少只？']);
+    var counter = { n: 0 }, pic = h('div', 'pic');
+    pic.append(animalBox(d.k, d.c, d.s, counter), h('div', 'box dash', '? more'));
+    card.appendChild(pic);
+    var al = ansLine('more');
+    var p1 = P('Answer', 1, al.el, {
+      first: al.f,
+      check: function () { return al.f.num() === d.m ? { ok: true } : { ok: false, hint: 'Not yet. How many more to get from ' + d.s + ' to ' + d.t + '? 从 ' + d.s + ' 到 ' + d.t + ' 还差几个？' }; },
+      reveal: function () { al.f.set(d.m); },
+      lock: function () { al.f.lock(); }
+    });
+    var e = eqWidget();
+    var body = h('div'); body.appendChild(h('p', 'tip', 'Write an equation to show why your answer is correct. 写一个算式说明答案为什么对。'));
+    body.appendChild(e.el);
+    var p2 = P('Equation', 1, body, {
+      first: e.a,
+      check: function () { return storyEq(e, d.s, d.m, d.t); },
+      reveal: function () { e.set(d.s, '+', d.m, d.t); },
+      lock: function () { e.lock(); }
+    });
+    return { el: card, parts: [p1, p2] };
+  }
+
+  function pondEditor(T) {
+    var wrap = h('div', 'ed'), pond = h('div', 'zone pond'), grass = h('div', 'zone grass');
+    pond.appendChild(h('div', 'boxlabel', 'In the pond 池塘里'));
+    grass.appendChild(h('div', 'boxlabel', 'Out of the pond 池塘外'));
+    var ducks = [];
+    function add(i) {
+      var b = animalBtn('duck', 'yellow', null);
+      b.dataset.inPond = '0';
+      b.addEventListener('click', function () {
+        if (b.disabled) return;
+        var inP = b.dataset.inPond === '1';
+        b.dataset.inPond = inP ? '0' : '1';
+        (inP ? grass : pond).appendChild(b);
+        onEdit();
+      });
+      ducks.push(b); grass.appendChild(b);
+    }
+    for (var i = 0; i < T; i++) add(i);
+    wrap.append(pond, grass);
+    function inCount() { return ducks.filter(function (b) { return b.dataset.inPond === '1'; }).length; }
+    return {
+      el: wrap,
+      inCount: inCount,
+      outCount: function () { return T - inCount(); },
+      setIn: function (n) { ducks.forEach(function (b, i) { var want = i < n; b.dataset.inPond = want ? '1' : '0'; (want ? pond : grass).appendChild(b); }); },
+      lock: function () { ducks.forEach(function (b) { b.disabled = true; }); }
+    };
+  }
+
+  function buildQ3(d) {
+    var T = d.T;
+    var card = qCard(3, [
+      'The zoo has ' + T + ' ducks.',
+      'Make a drawing of 2 different ways the ducks can be in the pond or out of the pond.',
+      'Write two different addition equations to show how the ducks can be in the pond or out of the pond.'
+    ], ['动物园有 ' + T + ' 只鸭子。画出鸭子在池塘里和池塘外的 2 种不同分法，并写两个不同的加法算式。']);
+    var firstKey = null, parts = [];
+    function way(n) {
+      var ed = pondEditor(T), e = eqWidget();
+      var body = h('div'); body.style.display = 'flex'; body.style.flexDirection = 'column'; body.style.gap = '10px';
+      body.append(h('p', 'tip', 'Tap a duck to move it into the pond or out of the pond. 点鸭子，把它放进池塘或放到池塘外。'), ed.el, e.el);
+      var p = P('Way ' + n, 2, body, {
+        first: e.a,
+        check: function () {
+          var inN = ed.inCount(), outN = ed.outCount();
+          if (inN < 1 || outN < 1) return { ok: false, hint: 'Put some ducks in the pond and some out of it. 池塘里和池塘外都要有鸭子。' };
+          if (n === 2 && pairKey(inN, outN) === firstKey) return { ok: false, hint: 'That is the same way as Way 1. Move the ducks to make a different way. 和第一种一样，换一种分法。' };
+          var v = e.vals();
+          if (v.a === null || v.b === null || v.c === null) return { ok: false, hint: 'Write the whole equation, with = and the total. 要写完整的算式。' };
+          if (v.op !== '+') return { ok: false, hint: 'Use an addition equation (+). 这里要写加法算式。' };
+          if (v.a + v.b !== v.c || v.c !== T) return { ok: false, hint: 'The two numbers should add up to ' + T + '. 两个数加起来要等于 ' + T + '。' };
+          if (pairKey(v.a, v.b) !== pairKey(inN, outN)) return { ok: false, hint: 'Your equation does not match your drawing. Count the ducks in the pond and out of it. 算式要和你画的对上。' };
+          if (n === 1) firstKey = pairKey(inN, outN);
+          return { ok: true };
+        },
+        reveal: function () {
+          var pick = 1;
+          for (var x = 1; x < T; x++) { if (n === 1 || pairKey(x, T - x) !== firstKey) { pick = x; break; } }
+          ed.setIn(pick); e.set(pick, '+', T - pick, T);
+          if (n === 1) firstKey = pairKey(pick, T - pick);
+        },
+        lock: function () { ed.lock(); e.lock(); }
+      });
+      return p;
+    }
+    parts.push(way(1), way(2));
+    card.appendChild(h('div', 'tip', ''));
+    return { el: card, parts: parts };
+  }
+
+  function buildQ4(d) {
+    var card = qCard(4, [
+      'Tim feeds ' + d.w + ' white rabbits and ' + d.g + ' gray rabbits.',
+      'How many more white rabbits than gray rabbits does Tim feed?'
+    ], ['Tim 喂了 ' + d.w + ' 只白兔和 ' + d.g + ' 只灰兔。白兔比灰兔多多少只？']);
+    var pic = h('div', 'pic'); pic.style.flexDirection = 'column';
+    pic.append(animalBox('rabbit', 'white', d.w, null, 'White rabbits 白兔'), animalBox('rabbit', 'gray', d.g, null, 'Gray rabbits 灰兔'));
+    card.appendChild(pic);
+    var al = ansLine('more'), diff = d.w - d.g;
+    var p = P('Answer', 1, al.el, {
+      first: al.f,
+      check: function () { return al.f.num() === diff ? { ok: true } : { ok: false, hint: 'Not yet. "How many more" asks for the difference. Line up the rabbits one to one. 想一想：把兔子一一对应，多出来几只？' }; },
+      reveal: function () { al.f.set(diff); },
+      lock: function () { al.f.lock(); }
+    });
+    return { el: card, parts: [p] };
+  }
+
+  function buildQ5(d) {
+    var diff = d.w - d.g;
+    var card = qCard(5, [
+      'Explain why your answer to Item 4 is correct.',
+      'Use numbers, pictures, or words.'
+    ], ['解释为什么第 4 题的答案是对的。可以用数字、图或文字。']);
+    var pic = h('div', 'pic'); pic.style.flexDirection = 'column';
+    var wBox = animalBox('rabbit', 'white', d.w, null, 'White rabbits 白兔'), gBox = animalBox('rabbit', 'gray', d.g, null, 'Gray rabbits 灰兔');
+    pic.append(wBox, gBox);
+    card.appendChild(pic);
+    var whites = Array.prototype.slice.call(wBox.querySelectorAll('.ab')), grays = Array.prototype.slice.call(gBox.querySelectorAll('.ab'));
+    var paired = 0, pairLocked = false;
+    function pairNext(gb) {
+      if (pairLocked || gb.classList.contains('pair')) return;
+      var wb = whites[paired];
+      paired++;
+      [gb, wb].forEach(function (b) { b.classList.add('pair'); b.querySelector('.bd').textContent = paired; });
+      onEdit();
+      if (paired === d.g) whites.slice(d.g).forEach(function (b) { b.classList.add('left'); });
+    }
+    grays.forEach(function (b) { b.addEventListener('click', function () { pairNext(b); }); });
+    var b1 = h('div'); b1.appendChild(h('p', 'tip', 'Tap each gray rabbit to match it with a white rabbit. 点灰兔，给每只灰兔配一只白兔。'));
+    var p1 = P('Match', 1, b1, {
+      needsPad: false,
+      check: function () { return paired === d.g ? { ok: true, msg: 'Matched! ' + diff + ' white rabbits have no partner. 配好了！' } : { ok: false, hint: 'Match every gray rabbit first. 先给每只灰兔都配上对。' }; },
+      reveal: function () { grays.forEach(function (b) { if (!b.classList.contains('pair')) pairNext(b); }); },
+      lock: function () { pairLocked = true; }
+    });
+    var optData = [
+      { ok: true, en: 'Match each gray rabbit with a white rabbit. ' + diff + ' white rabbits have no partner, so ' + d.w + ' ' + MINUS + ' ' + d.g + ' = ' + diff + '.', zh: '每只灰兔配一只白兔，剩下 ' + diff + ' 只白兔没有配对，所以 ' + d.w + ' ' + MINUS + ' ' + d.g + ' = ' + diff + '。' },
+      { ok: false, en: d.w + ' + ' + d.g + ' = ' + (d.w + d.g) + ', so Tim feeds ' + (d.w + d.g) + ' more white rabbits.', zh: '把两种兔子加起来，不是求“多几只”。' },
+      { ok: false, en: 'There are ' + d.g + ' gray rabbits, so there are ' + d.g + ' more white rabbits.', zh: '灰兔有几只，不等于白兔多几只。' }
+    ];
+    shuffle(optData);
+    var chosen = null, opts = h('div', 'opts'), optEls = [];
+    optData.forEach(function (o) {
+      var b = h('button', 'opt', o.en + '<div class="zh">' + o.zh + '</div>'); b.type = 'button'; b.setAttribute('aria-pressed', 'false');
+      b.addEventListener('click', function () {
+        if (b.disabled) return;
+        optEls.forEach(function (x) { x.setAttribute('aria-pressed', 'false'); });
+        b.setAttribute('aria-pressed', 'true'); chosen = o; onEdit();
+      });
+      optEls.push(b); opts.appendChild(b);
+    });
+    var b2 = h('div'); b2.style.display = 'flex'; b2.style.flexDirection = 'column'; b2.style.gap = '10px';
+    b2.append(h('p', 'tip', 'Pick the best explanation. 选最合适的解释。'), opts);
+    var p2 = P('Explain', 1, b2, {
+      needsPad: false,
+      check: function () {
+        if (!chosen) return { ok: false, hint: 'Pick one explanation. 先选一个。' };
+        return chosen.ok ? { ok: true } : { ok: false, hint: 'Think about matching rabbits one to one, then what is left over. 想一想一一对应后剩下的。' };
+      },
+      reveal: function () { optData.forEach(function (o, i) { if (o.ok) { optEls[i].setAttribute('aria-pressed', 'true'); chosen = o; } }); },
+      lock: function () { optEls.forEach(function (b, i) { b.disabled = true; if (optData[i].ok) b.classList.add('ok'); }); }
+    });
+    return { el: card, parts: [p1, p2] };
+  }
+
+  /* ---------- round data ---------- */
+  function makeRound() {
+    var big = L === 20, kinds = shuffle(Object.keys(ANIMALS));
+    var aMax = big ? 12 : 6, a = 2 + rand(aMax - 1), b = 2 + rand(L - a - 1), pr = pickOne(PAIRS);
+    var q1 = { k: kinds[0], a: a, b: b, c1: pr[0], c2: pr[1] };
+    var s = 1 + rand(big ? 10 : 5), maxM = Math.min(L - s, big ? 12 : 6), m = 2 + rand(maxM - 1);
+    var q2 = { k: kinds[1], s: s, m: m, t: s + m, c: pickOne(['white', 'brown', 'gray', 'black']) };
+    var q3 = { T: big ? 11 + rand(10) : 5 + rand(6) };
+    var w = big ? 11 + rand(8) : 6 + rand(4), g = 2 + rand(w - 3);
+    var q4 = { w: w, g: g };
+    return [
+      { build: function () { return buildQ1(q1); } },
+      { build: function () { return buildQ2(q2); } },
+      { build: function () { return buildQ3(q3); } },
+      { build: function () { return buildQ4(q4); } },
+      { build: function () { return buildQ5(q4); } }
+    ];
+  }
+
+  /* ---------- flow ---------- */
+  var TICK = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M4 17 L12 26 L29 5" fill="none" stroke="var(--pen)" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  var CROSS = '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M5 5 L27 27 M27 5 L5 27" fill="none" stroke="var(--pen)" stroke-width="4.5" stroke-linecap="round"/></svg>';
+
+  function setHint(msg, kind) { hintEl.textContent = msg; hintEl.className = 'hint' + (kind ? ' ' + kind : ''); }
+  function renderScore() { $('score').innerHTML = score + '<small>/10</small>'; }
+  function renderSteps() {
+    var box = $('steps'); box.innerHTML = '';
+    for (var i = 0; i < 5; i++) {
+      var cls = 'step', q = qs[i];
+      if (i === qi && !q.finished) cls += ' now';
+      if (q.finished) cls += (q.earned === q.total ? ' full' : ' part');
+      box.appendChild(h('div', cls, String(i + 1)));
+    }
+  }
+  function updateButtons() {
+    var p = cur && cur.parts[pi];
+    btnCheck.hidden = qDone;
+    btnShow.hidden = qDone || !p || p.tries < 2;
+    btnNext.hidden = !qDone;
+    padEl.hidden = qDone || !p || !p.needsPad;
+  }
+  function finishPart(p, full) {
+    p.done = true;
+    p.earned = full ? p.pts : 0;
+    score += p.earned;
+    qs[qi].earned += p.earned;
+    p.lock();
+    p.root.classList.remove('wrong');
+    p.root.querySelector('.pmark').innerHTML = full ? TICK : '';
+    renderScore();
+  }
+  function advance() {
+    pi++;
+    if (pi < cur.parts.length) {
+      var p = cur.parts[pi];
+      p.root.hidden = false;
+      if (p.first) setActive(p.first); else setActive(null);
+      p.root.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    } else {
+      qDone = true; qs[qi].finished = true; setActive(null);
+      btnNext.textContent = qi === 4 ? 'See score 看得分' : 'Next 下一题';
+      renderSteps();
+    }
+    updateButtons();
+  }
+  function doCheck() {
+    if (qDone) return;
+    var p = cur.parts[pi]; if (!p || p.done) return;
+    var r = p.check();
+    if (r.ok) {
+      finishPart(p, p.tries === 0);
+      setHint(r.msg || (p.tries === 0 ? 'Correct! 答对了！' : 'Correct, but no point this time. 对了，下次一次做对就有分。'), 'good');
+      advance();
+    } else {
+      p.tries++;
+      p.root.classList.add('wrong');
+      p.root.querySelector('.pmark').innerHTML = CROSS;
+      if (p.tries === 1) p.root.querySelector('.phead').appendChild(h('span', 'penchip', MINUS + p.pts));
+      setHint(r.hint, 'bad');
+      updateButtons();
+    }
+  }
+  function doShow() {
+    if (qDone) return;
+    var p = cur.parts[pi]; if (!p || p.done) return;
+    p.reveal();
+    finishPart(p, false);
+    setHint('Here is the answer. Study it, then try the next one. 这是答案，看看再继续。', '');
+    advance();
+  }
+  function startQuestion() {
+    sheet.innerHTML = ''; pi = 0; qDone = false; active = null;
+    cur = qs[qi].build();
+    qs[qi].total = cur.parts.reduce(function (s, p) { return s + p.pts; }, 0);
+    qs[qi].parts = cur.parts;
+    cur.parts.forEach(function (p, i) { p.root.hidden = i > 0; cur.el.appendChild(p.root); });
+    sheet.appendChild(cur.el);
+    setHint('', '');
+    if (cur.parts[0].first) setActive(cur.parts[0].first);
+    renderSteps(); updateButtons();
+    window.scrollTo({ top: 0 });
+  }
+  function showSummary() {
+    sheet.innerHTML = ''; setHint('', ''); setActive(null);
+    btnCheck.hidden = true; btnShow.hidden = true; btnNext.hidden = true; padEl.hidden = true;
+    var best = 0;
+    try { best = Math.max(parseInt(localStorage.getItem('zoo-best-' + L), 10) || 0, score); localStorage.setItem('zoo-best-' + L, String(best)); } catch (e) { best = score; }
+    var box = h('section', 'summary');
+    box.appendChild(h('div', 'big', String(score)));
+    box.appendChild(h('div', '', score === 10 ? 'Perfect! 满分！' : 'out of 10 分。看看哪里扣分了：'));
+    var ul = h('ul', 'sumlist');
+    qs.forEach(function (q, i) {
+      var miss = q.parts.filter(function (p) { return p.earned < p.pts; }).map(function (p) { return p.label + ' ' + MINUS + (p.pts - p.earned); });
+      ul.appendChild(h('li', '', '<span>Item ' + (i + 1) + (miss.length ? ' <span class="miss">' + miss.join(', ') + '</span>' : '') + '</span><span>' + q.earned + '/' + q.total + '</span>'));
+    });
+    box.appendChild(ul);
+    box.appendChild(h('p', 'best', 'Best at Within ' + L + ': ' + best + '/10 最高分'));
+    var again = h('button', 'btn', 'New set 再来一套'); again.type = 'button';
+    again.addEventListener('click', restart);
+    box.appendChild(again);
+    sheet.appendChild(box);
+    renderSteps();
+  }
+  function restart() {
+    qs = makeRound(); qs.forEach(function (q) { q.earned = 0; q.finished = false; });
+    qi = 0; score = 0; renderScore(); startQuestion();
+  }
+
+  btnCheck.addEventListener('click', doCheck);
+  btnShow.addEventListener('click', doShow);
+  btnNext.addEventListener('click', function () {
+    if (qi === 4) { qi = 5; showSummary(); return; }
+    qi++; startQuestion();
+  });
+  document.addEventListener('keydown', function (ev) {
+    if (ev.target && ev.target.tagName === 'BUTTON' && ev.key === 'Enter') return;
+    if (/^[0-9]$/.test(ev.key)) press(ev.key);
+    else if (ev.key === 'Backspace') press('back');
+    else if (ev.key === 'Enter') { if (!btnNext.hidden) btnNext.click(); else doCheck(); }
+  });
+
+  function renderTools() {
+    $('lv10').setAttribute('aria-pressed', String(L === 10));
+    $('lv20').setAttribute('aria-pressed', String(L === 20));
+    $('zh').setAttribute('aria-pressed', String(zhOn));
+    document.body.classList.toggle('zh', zhOn);
+  }
+  function setLevel(n) {
+    if (n === L) return;
+    L = n; try { localStorage.setItem('zoo-level', String(n)); } catch (e) {}
+    renderTools(); restart();
+  }
+  $('lv10').addEventListener('click', function () { setLevel(10); });
+  $('lv20').addEventListener('click', function () { setLevel(20); });
+  $('zh').addEventListener('click', function () {
+    zhOn = !zhOn; try { localStorage.setItem('zoo-zh', zhOn ? 'on' : 'off'); } catch (e) {}
+    renderTools();
+  });
+
+  buildPad(); renderTools(); restart();
+})();
+</script>
+
+</body></html>
